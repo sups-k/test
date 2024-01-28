@@ -1,0 +1,53 @@
+---
+title: "PSET_1"
+author: "Suparna Kumar"
+format: pdf
+editor: visual
+---
+
+## How to apply the quadratic equation
+
+This lesson demonstrates how to apply the quadratic equation with an example. We will also graphically demonstrate the solution.
+
+### Applying quadratic equation
+
+The roots of a quadratic equation of the form $f(x) = ax^2+bx+d=0$ are:
+
+$$
+x = \frac{-b \pm \sqrt{b^2-4ad}}{2a}
+$$ In this example, we will only report the real roots.
+
+```{r}
+# Define the variables
+a <- 1
+b <- 3
+d <- 2
+
+# Calculating the roots
+a <- as.complex(a)
+roots <- c( ((-b + sqrt(b^2 - 4*a*d)) / (2*a)),
+              ((-b - sqrt(b^2 - 4*a*d)) / (2*a)) )
+if(all(Im(roots) == 0)){
+  roots <- Re(roots)
+  print(roots)
+}
+```
+
+### Graphical solution of quadratic equation
+
+The x-intercepts of the graph give the roots of the quadratic equation if the roots are real. Here, they are marked in red.
+
+```{r}
+#| echo: false
+# Domain over which to plot f(x)
+x <- seq(-5, 5,len = 100)
+
+# Define f(x)
+f <- a*x^2 + b*x + d
+
+# Plot f(x)
+plot(x, f, type = "l")
+abline(h = 0) # x-axis
+abline(v = 0) # y-axis
+abline(v = roots, col = "red", lwd = 2) # roots
+```
