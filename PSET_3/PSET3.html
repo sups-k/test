@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Suparna Kumar">
+
+<title>PSET_3</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="PSET3_files/libs/clipboard/clipboard.min.js"></script>
+<script src="PSET3_files/libs/quarto-html/quarto.js"></script>
+<script src="PSET3_files/libs/quarto-html/popper.min.js"></script>
+<script src="PSET3_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="PSET3_files/libs/quarto-html/anchor.min.js"></script>
+<link href="PSET3_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="PSET3_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="PSET3_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="PSET3_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="PSET3_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PSET_3</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Suparna Kumar </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="covid-19-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="covid-19-data-analysis">COVID-19 Data Analysis</h2>
+<section id="us-census-data" class="level3">
+<h3 class="anchored" data-anchor-id="us-census-data">US Census Data</h3>
+<p>In order to get population information, first obtain a census key from the US census website. Store the key in an R file and load it here.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read census key</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"~/Downloads/test/PSET_3/census_key.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Find the appropriate API from the US census website and use it to obtain population data for the years 2020 and 2021.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>api <span class="ot">&lt;-</span> <span class="st">"https://api.census.gov/data/2021/pep/population"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Write request</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>request <span class="ot">&lt;-</span> <span class="fu">request</span>(api) <span class="sc">|&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">req_url_query</span>(<span class="at">get =</span> <span class="fu">I</span>(<span class="st">"POP_2020,POP_2021,NAME"</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">`</span><span class="at">for</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">I</span>(<span class="st">"state:*"</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">key =</span> census_key)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Submit request</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>request <span class="ot">&lt;-</span> request <span class="sc">|&gt;</span> <span class="fu">req_perform</span>()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract population information</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> request <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fromJSON</span>(<span class="at">flatten =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Change the data to long form and add state abbreviations.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> population <span class="sc">|&gt;</span> <span class="fu">row_to_names</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>state) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">state_name =</span> NAME) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># row_to_names(n) is a janitor function that defines the nth row as the header row</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>state_name, <span class="at">names_to =</span> <span class="st">"year"</span>, <span class="at">values_to =</span> <span class="st">"population"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">str_remove</span>(year, <span class="st">"POP_"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>state_name, as.numeric)) <span class="sc">|&gt;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">state =</span> state.abb[<span class="fu">match</span>(state_name, state.name)]) <span class="sc">|&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Match the state names in df to US state abbreviations and add them to the df</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">case_when</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    state_name <span class="sc">==</span> <span class="st">"District of Columbia"</span> <span class="sc">~</span><span class="st">"DC"</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    state_name <span class="sc">==</span> <span class="st">"Puerto Rico"</span> <span class="sc">~</span> <span class="st">"PR"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> state))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Make a bar plot that shows the population in different US states for the year 2021. Also make a plot to show the percentage of change in the populations in each state from 2020 to 2021.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Barplot of 2021 populations by state</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>population <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2021</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> state, <span class="at">y =</span> population, <span class="at">fill =</span> state)) <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_hue</span>(<span class="at">c=</span><span class="dv">40</span>) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"US State"</span>) <span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Population in 2021"</span>) <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bar plot of percent population change</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>population <span class="sc">|&gt;</span> <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> year, <span class="at">values_from =</span> population) <span class="sc">|&gt;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop_change =</span> ( (<span class="st">`</span><span class="at">2021</span><span class="st">`</span> <span class="sc">-</span> <span class="st">`</span><span class="at">2020</span><span class="st">`</span>)<span class="sc">*</span><span class="dv">100</span><span class="sc">/</span><span class="st">`</span><span class="at">2020</span><span class="st">`</span> )) <span class="sc">|&gt;</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(state, pop_change), <span class="at">y =</span> pop_change)) <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>, <span class="at">width =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Percentage Change in State Populations (2020-2021)"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"State"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Percent Change"</span>) <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Add CDC region information to the population table.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the following region numbers to population</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>cdc_regions_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"1"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Connecticut"</span>, <span class="st">"Maine"</span>, <span class="st">"Massachusetts"</span>, <span class="st">"New Hampshire"</span>, <span class="st">"Rhode Island"</span>, <span class="st">"Vermont"</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"New Jersey"</span>, <span class="st">"New York"</span>, <span class="st">"Puerto Rico"</span>, <span class="st">"Virgin Islands"</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"3"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Delaware"</span>, <span class="st">"District of Columbia"</span>, <span class="st">"Maryland"</span>, <span class="st">"Pennsylvania"</span>, <span class="st">"Virginia"</span>, <span class="st">"West Virginia"</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"4"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Alabama"</span>, <span class="st">"Florida"</span>, <span class="st">"Georgia"</span>, <span class="st">"Kentucky"</span>, <span class="st">"Mississippi"</span>, <span class="st">"North Carolina"</span>, <span class="st">"South Carolina"</span>, <span class="st">"Tennessee"</span>),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"5"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Illinois"</span>, <span class="st">"Indiana"</span>, <span class="st">"Michigan"</span>, <span class="st">"Minnesota"</span>, <span class="st">"Ohio"</span>, <span class="st">"Wisconsin"</span>),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"6"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Arkansas"</span>, <span class="st">"Louisiana"</span>, <span class="st">"New Mexico"</span>, <span class="st">"Oklahoma"</span>, <span class="st">"Texas"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"7"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Iowa"</span>, <span class="st">"Kansas"</span>, <span class="st">"Missouri"</span>, <span class="st">"Nebraska"</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"8"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>, <span class="st">"Montana"</span>, <span class="st">"North Dakota"</span>, <span class="st">"South Dakota"</span>, <span class="st">"Utah"</span>, <span class="st">"Wyoming"</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"9"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Arizona"</span>, <span class="st">"California"</span>, <span class="st">"Hawaii"</span>, <span class="st">"Nevada"</span>, <span class="st">"American Samoa"</span>, <span class="st">"Commonwealth of the Northern Mariana Islands"</span>, <span class="st">"Federated States of Micronesia"</span>, <span class="st">"Guam"</span>, <span class="st">"Marshall Islands"</span>, <span class="st">"Republic of Palau"</span>),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"10"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Alaska"</span>, <span class="st">"Idaho"</span>, <span class="st">"Oregon"</span>, <span class="st">"Washington"</span>))</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>cdc_regions <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">names</span>(cdc_regions_list), <span class="cf">function</span>(region) {</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">region =</span> region, <span class="at">state_name =</span> cdc_regions_list[[region]])</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>})) <span class="sc">|&gt;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">region =</span> <span class="fu">factor</span>(<span class="fu">as.numeric</span>(region)))</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>population <span class="ot">&lt;-</span> <span class="fu">left_join</span>(<span class="at">x =</span> population, <span class="at">y =</span> cdc_regions, <span class="at">by =</span> <span class="st">"state_name"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="gathering-information-on-covid-19-in-the-us" class="level3">
+<h3 class="anchored" data-anchor-id="gathering-information-on-covid-19-in-the-us">Gathering Information on COVID-19 in The US</h3>
+<p>First, find appropriate APIs from the CDC website for the number of COVID-19 cases, hospitalisations, deaths, and vaccinations.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># COVID-19 APIs</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>cases_api <span class="ot">&lt;-</span> <span class="st">"https://data.cdc.gov/resource/pwn4-m3yp.json"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>hosp_api <span class="ot">&lt;-</span> <span class="st">"https://data.cdc.gov/resource/39z2-9zu6.json"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>deaths_api <span class="ot">&lt;-</span> <span class="st">"https://data.cdc.gov/resource/r8kw-7aab.json"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>vac_api <span class="ot">&lt;-</span> <span class="st">"https://data.cdc.gov/resource/rh2h-3yt2.json"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Obtain the data tables from the APIs and collapse the results into weekly data. Also add information like epidemiological week and year.</p>
+<section id="cases" class="level4">
+<h4 class="anchored" data-anchor-id="cases">Cases</h4>
+<p>Filter the cases to show those from 2020 and 2021 since we only have population information for those years. I use the end date of the collection week to specify the epidemiological week and year. I collapsed the data to show the total number of cases per week. I also filter out data where a particular state is not present in the population data. This is necessary because in the “state” column of the “cases” table, there are places that are not US states but are included, such as New York City.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Submit request &amp; extract information</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>cases <span class="ot">&lt;-</span> <span class="fu">request</span>(cases_api) <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">req_url_query</span>(<span class="st">"$limit"</span> <span class="ot">=</span> <span class="dv">10000000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">resp_body_string</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fromJSON</span>(<span class="at">flatten =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter data</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>cases_filtered <span class="ot">&lt;-</span> cases <span class="sc">|&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(population, <span class="at">by =</span> <span class="st">"state"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">epid_week =</span> <span class="fu">epiweek</span>(end_date), <span class="at">epid_year =</span> <span class="fu">epiyear</span>(end_date), <span class="at">new_cases =</span> <span class="fu">as.numeric</span>(new_cases)) <span class="sc">|&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(epid_year <span class="sc">==</span> <span class="dv">2020</span> <span class="sc">|</span> epid_year <span class="sc">==</span> <span class="dv">2021</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(state, <span class="fu">as_date</span>(end_date)) <span class="sc">|&gt;</span> </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(state, epid_week, epid_year, new_cases) <span class="sc">|&gt;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(new_cases)) <span class="sc">|&gt;</span> </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, epid_week, epid_year) <span class="sc">|&gt;</span> </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">new_cases =</span> <span class="fu">sum</span>(new_cases))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'state', 'epid_week'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define function to get information from API</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>get_cdc_data <span class="ot">&lt;-</span> <span class="cf">function</span>(api){</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Write request</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">request</span>(api) <span class="sc">|&gt;</span> </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_url_query</span>(<span class="st">"$limit"</span> <span class="ot">=</span> <span class="dv">10000000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">resp_body_string</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fromJSON</span>(<span class="at">flatten =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return data frame</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(cases)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          used (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
+Ncells 1196953 64.0    2384207 127.4         NA  2384207 127.4
+Vcells 2533957 19.4    8388608  64.0      16384  7672616  58.6</code></pre>
+</div>
+</div>
+</section>
+<section id="hospitalisations" class="level4">
+<h4 class="anchored" data-anchor-id="hospitalisations">Hospitalisations</h4>
+<p>Filter the number of hospitalisations to show those from 2020 and 2021 since we only have population information for those years. I use the data collection date to specify the epidemiological week and year. I removed data points where the number of collection points within a week were less than 7. I then collapsed the data to show the total number of hospitalisations per week. Like the “cases” table, I also filter out data where a particular state is not present in the population data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get hospitalisation data</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>hosp_raw <span class="ot">&lt;-</span> <span class="fu">get_cdc_data</span>(hosp_api)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter data</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>hosp <span class="ot">&lt;-</span> hosp_raw <span class="sc">|&gt;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(collection_date, jurisdiction, total_hospitalized_covid) <span class="sc">|&gt;</span> </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">state =</span> jurisdiction) <span class="sc">|&gt;</span> </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">str_detect</span>(state, <span class="st">"Region"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(population, <span class="at">by =</span> <span class="st">"state"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">epid_week =</span> <span class="fu">epiweek</span>(collection_date),</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">epid_year =</span> <span class="fu">epiyear</span>(collection_date),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">total_hospitalized_covid =</span> <span class="fu">as.numeric</span>(total_hospitalized_covid))</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>weekly_hosp <span class="ot">&lt;-</span> hosp <span class="sc">|&gt;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, epid_week, epid_year) <span class="sc">|&gt;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">num_collection_dates =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Filter out weeks with less than 7 collection dates</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(num_collection_dates <span class="sc">&gt;=</span> <span class="dv">7</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Summarize total cases per week</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, epid_week, epid_year) <span class="sc">|&gt;</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_hospitalised =</span> <span class="fu">sum</span>(total_hospitalized_covid), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>hosp <span class="ot">&lt;-</span> weekly_hosp <span class="sc">|&gt;</span> </span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(total_hospitalised)) <span class="sc">|&gt;</span> </span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(epid_year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2020</span>, <span class="dv">2021</span>))</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(weekly_hosp)</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           used (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
+Ncells  1649353 88.1    5201567 277.8         NA  3769994 201.4
+Vcells 12163417 92.8   33109224 252.7      16384 33085671 252.5</code></pre>
+</div>
+</div>
+</section>
+<section id="deaths" class="level4">
+<h4 class="anchored" data-anchor-id="deaths">Deaths</h4>
+<p>Filter the number of COVID-19 deaths to show those from 2020 and 2021 since we only have population information for those years. I added state abbreviations to this data. I also filter out data where a particular state is not present in the population data. I use the end date of the data collection week to specify the epidemiological week and year. I collapsed the data to show the total number of deaths per week.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># COVID-19 Deaths</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>deaths_raw <span class="ot">&lt;-</span> <span class="fu">get_cdc_data</span>(deaths_api)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>deaths <span class="ot">&lt;-</span> deaths_raw <span class="sc">|&gt;</span> </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">state_name =</span> state) <span class="sc">|&gt;</span> </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">state =</span> state.abb[<span class="fu">match</span>(state_name, state.name)]) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">state =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    state_name <span class="sc">==</span> <span class="st">"District of Columbia"</span> <span class="sc">~</span><span class="st">"DC"</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    state_name <span class="sc">==</span> <span class="st">"Puerto Rico"</span> <span class="sc">~</span> <span class="st">"PR"</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> state)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">epid_week =</span> <span class="fu">epiweek</span>(end_date), <span class="at">epid_year =</span> <span class="fu">epiyear</span>(end_date)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(population, <span class="at">by =</span> <span class="st">"state"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(epid_year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2020</span>, <span class="dv">2021</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(state, epid_week, epid_year, covid_19_deaths) <span class="sc">|&gt;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>state, as.numeric)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(covid_19_deaths)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, epid_week, epid_year) <span class="sc">|&gt;</span> </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">total_deaths =</span> <span class="fu">sum</span>(covid_19_deaths))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'state', 'epid_week'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(deaths_raw)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          used (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
+Ncells 1652131 88.3    5201567 277.8         NA  3769994 201.4
+Vcells 6196634 47.3   26487380 202.1      16384 33085671 252.5</code></pre>
+</div>
+</div>
+</section>
+<section id="vaccinations-boosters" class="level4">
+<h4 class="anchored" data-anchor-id="vaccinations-boosters">Vaccinations &amp; Boosters</h4>
+<p>Filter the number of vaccinations and boosters to show those from 2020 and 2021 since we only have population information for those years. I also filter out data where a particular state is not present in the population data. I use the date of administration to specify the epidemiological week and year. I collapsed the data to show the total number of doses per week. This total reflects the number of doses reported by medical establishments and those self-reported to the CDC. I chose to add them because some doses may not have been captured on file by hospital staff.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>vax_raw <span class="ot">&lt;-</span> <span class="fu">get_cdc_data</span>(vac_api)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>vax <span class="ot">&lt;-</span> vax_raw <span class="sc">|&gt;</span> </span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">state =</span> location) <span class="sc">|&gt;</span> </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(state, date, date_type, series_complete_daily, booster_daily) <span class="sc">|&gt;</span> </span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">epid_year =</span> <span class="fu">epiyear</span>(date), <span class="at">epid_week =</span> <span class="fu">epiweek</span>(date)) <span class="sc">|&gt;</span> </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(epid_year, series_complete_daily, booster_daily), as.numeric)) <span class="sc">|&gt;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(epid_year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2020</span>, <span class="dv">2021</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(series_complete_daily <span class="sc">&gt;=</span> <span class="dv">0</span>, booster_daily <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, epid_week, epid_year) <span class="sc">|&gt;</span> </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">total_series =</span> <span class="fu">sum</span>(series_complete_daily), <span class="at">total_booster =</span> <span class="fu">sum</span>(booster_daily), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(total_series), <span class="sc">!</span><span class="fu">is.na</span>(total_booster)) <span class="sc">|&gt;</span> </span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">semi_join</span>(population, <span class="at">by =</span> <span class="st">"state"</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(vax_raw)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           used  (Mb) gc trigger  (Mb) limit (Mb) max used  (Mb)
+Ncells  1652200  88.3    5675891 303.2         NA  5383513 287.6
+Vcells 15906524 121.4   52691624 402.1      16384 52690978 402.1</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="combining-all-information" class="level3">
+<h3 class="anchored" data-anchor-id="combining-all-information">Combining All Information</h3>
+<p>Now that we have all the information we need, we will join all the tables together. Because not every week in every year will have data, there will be some NA values in this combined table.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ready to join tables </span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>all_dates <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">date =</span> <span class="fu">seq</span>(<span class="fu">make_date</span>(<span class="dv">2020</span>, <span class="dv">1</span>, <span class="dv">25</span>), <span class="fu">make_date</span>(<span class="dv">2021</span>, <span class="dv">12</span>, <span class="dv">31</span>), <span class="at">by =</span> <span class="st">"week"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">ceiling_date</span>(date, <span class="at">unit =</span> <span class="st">"week"</span>, <span class="at">week_start =</span> <span class="dv">7</span>) <span class="sc">-</span> <span class="fu">days</span>(<span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">epid_year =</span> <span class="fu">epiyear</span>(date), <span class="at">epid_week =</span> <span class="fu">epiweek</span>(date)) </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>dates_and_pop <span class="ot">&lt;-</span> <span class="fu">cross_join</span>(population, all_dates)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dates_and_pop <span class="sc">|&gt;</span> </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cases_filtered, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"epid_week"</span>, <span class="st">"epid_year"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hosp, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"epid_week"</span>, <span class="st">"epid_year"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(deaths, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"epid_week"</span>, <span class="st">"epid_year"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(vax, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"epid_week"</span>, <span class="st">"epid_year"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="graphing-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="graphing-the-data">Graphing The Data</h3>
+<p>Here we plot the number of COVID-19 cases as a proportion of the population size over time. As the days went by, the cases increased in every state.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Hospitalisation and death rates also increased with time until the vaccines started rolling out.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>For the period of January 1 to July 1, 2021 the deaths per day per 100,000 people in each state as well as the vaccination rate (primary series) by September 1st is shown below. Clearly, death rates reduced with vaccination.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>For the period of October 1 to December 31, 2021 the deaths per day per 100,000 people in each state as well as the booster rate is shown below. Again, death rates reduced with getting additional booster shots.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="PSET3_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
