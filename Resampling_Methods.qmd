@@ -106,7 +106,3 @@ In bootstrap resampling, we create a large number of bootstrap samples from the 
 We then average the MSEs obtained in the out-of-bag observations from each bootstrap sample to estimate the model’s performance.
 
 This approach is the default in the `caret` package.
-
-
-
-
