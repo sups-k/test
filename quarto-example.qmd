@@ -1,0 +1,93 @@
+---
+title: "Quarto"
+format: html
+editor: visual
+---
+
+## Text formating
+
+*italics*, **bold**, ***bold italics***
+
+~strikethrough~
+
+`code`
+
+## Headings
+
+`# Header 1`
+
+`## Header 2`
+
+`### Header 3`
+
+and so on
+
+## Links
+
+Just the link: <https://quarto.org/docs/guide/>
+
+Linked text: [This is the link to Quarto Guide](https://quarto.org/docs/guide/)
+
+## Images
+
+![First week of data science](https://datasciencedojo.com/wp-content/uploads/11-1.jpg)
+
+The image can also be a local file.
+
+## Lists
+
+Bullets:
+
+-   bullet 1
+    -   sub-bullet 1
+    -   sub-bullet 2
+-   bullet 2
+
+Ordered list
+
+1.  Item 1
+2.  Item 2
+
+## Equations
+
+Inline: $Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i$
+
+Display math:
+
+$$
+\mathbf{Y} = \mathbf{X\beta} + \mathbf{\varepsilon}
+$$
+
+## Computations
+
+The main reason we use Quarto is because we can include code and execute the code when compiling the document. In R we refer to them as R chunks.
+
+To add your own R chunks, you can type the characters above quickly with the key binding command-option-I on the Mac and Ctrl-Alt-I on Windows.
+
+This applies to plots as well; the plot will be placed in that position. We can write something like this:
+
+```{r}
+x <- 1
+y <- 2
+x + y
+```
+
+By default, the code will show up as well. To avoid having the code show up, you can use an argument, which are annotated with `|#` To avoid showing code in the final document, you can use the argument `echo: FALSE`. For example:
+
+```{r}
+#| echo: false
+
+x <- 1
+y <- 2
+x + y
+```
+
+We recommend getting into the habit of adding a label to the R code chunks. This will be very useful when debugging, among other situations. You do this by adding a descriptive word like this:
+
+```{r}
+#| label: one-plus-two
+
+x <- 1
+y <- 2
+x + y
+```

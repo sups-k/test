@@ -1,0 +1,51 @@
+---
+title: "PSET_2"
+author: "Suparna Kumar"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(dslabs)
+library(ggplot2)
+```
+
+
+## The Importance of Vaccines in Public Health
+
+Vaccines play a crucial role in public health by preventing the spread of infectious diseases and protecting individuals from potentially life-threatening illnesses. They are a cornerstone in the effort to maintain overall community well-being and safety. In recent years, there has been an unfortunate resurgence of misinformation surrounding vaccines, particularly concerning their alleged link to autism. This article aims to dispel these unfounded claims by presenting robust evidence demonstrating the efficacy of vaccines in preventing diseases and establishing the absence of any credible link to autism.
+
+### Vaccines and Disease Prevention
+
+Vaccines have contributed to the near-eradication of many deadly diseases. Diseases like smallpox and polio, which once wreaked havoc on communities, are now rare due to widespread vaccination programs. To illustrate this point, let's examine the decline in cases of measles, mumps, and rubella (MMR) following the introduction of the MMR vaccine.
+
+```{r}
+## use this color pallete
+reds <- RColorBrewer::brewer.pal(9, "Reds")
+
+us_contagious_diseases %>%
+  filter(disease == "Measles" & weeks_reporting > 0) %>%
+  mutate(us_rate = count / population * 10000 * 52 / weeks_reporting) %>%
+   mutate(state = reorder(state, ifelse(year <= 1963, us_rate, NA), 
+                         median, na.rm = TRUE)) %>%
+ ggplot(aes(year, state, fill = us_rate)) +
+  geom_tile(color = "grey50") +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_fill_gradientn(colors = reds, trans = "sqrt") +
+  geom_vline(xintercept = 1963, col = "blue") +
+  theme_minimal() +  
+  theme(panel.grid = element_blank(), 
+        legend.position = "bottom", 
+        text = element_text(size = 8)) +
+  labs(title = "Incidence of Measles in The US", x = "Year", y = "State")
+```
+
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+

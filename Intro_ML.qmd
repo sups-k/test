@@ -1,0 +1,303 @@
+---
+title: "Intro to ML"
+author: "Suparna Kumar"
+format: html
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| warning: false
+library(tidyverse)
+library(dslabs)
+library(caret)
+```
+
+## MNIST Database
+
+MNIST is a database of handwritten numbers 0-9 encoded as images. For each digitized image, indexed by i, we are provided with 784 variables and a categorical outcome, or label, representing the digit among 0-9 that the image is representing. This give us data.
+
+Images are converted into 28 X 28 = 784 pixels and, for each pixel, we obtain a grey scale intensity between 0 (white) and 255 (black).
+
+MNIST is stored in the `dslabs` package.
+
+```{r}
+if (!exists("mnist")) mnist <- read_mnist()
+```
+
+Pixel intensities (FEATURES/PREDICTORS/COVARIATES) are saved in a MATRIX
+
+```{r}
+dim(mnist$train$images)
+```
+
+The LABELS associated with each image are included in a VECTOR
+
+```{r}
+table(mnist$train$labels)
+rm(mnist)
+```
+
+## What is data in ML?
+
+Data = **OUTCOME** we want to predict **OR** data = **FEATURES/PREDICTORS/COVARIATES** used to predict outcome. **Outcomes can be CATEGORICAL or CONTINUOUS.**
+
+Outcome is represented by "Y".
+
+For categorical outcomes, *Y* can be any one of *K* classes. For example, in the MNIST dataset, K = 10 to represent each of the digits from 0-9. For these *K* categories, we denote them with indices *k* = 1, 2, ... *K*. However, for binary data, we use *k* = 0, 1.
+
+Features are denoted by ${X_1}$,...,${X_p}$, where p = number of features. For example, in the MNIST dataset, for each image i, there are 784 features and outcome $Y_i$, i.e., ${\bf{X_i}} = (X_{i,1} , ... ,X_{i,784})$
+
+Observed values are written as lower case, e.g., ${\bf{X_1}} = x_1$. However, when coding, we use lower case instead of upper case.
+
+### Continuous Outcome = Prediction
+
+When the output is continuous, we refer to the ML task as a **prediction** $\hat{y}$ which is a function denoted as:
+
+$\hat{y} = f(x_1, x_2,...,x_p)$
+
+The **actual outcome** $y$ is the real outcome, so we want $\hat{y}$ to match $y$ as best as possible.
+
+Because outcomes are continuous, $\hat{y}$ is not exactly right or wrong. Thus, we define **error** = $y - \hat{y}$.
+
+### Categorical Outcome = Classification
+
+When the outcome is categorical, we refer to the ML task as a **classification** which is a **decision rule** $\hat{y}$ that prescribes which os the *K* classes we should predict. Most models provide functions for the features of each class *k*, $f_k(x_1, x_2, ..., x_p)$, that are used to make this decision.
+
+When the data is binary, the decision rule is if $\hat{y}=f_1(x_1, x_2, ..., x_p) > \theta$, predict category 1, if not, predict the other category, with $\theta$ being the pre-determined cutoff.
+
+Since the outcome is categorical, predictions are either right or wrong. The evaluation metric is **overall accuracy** = proportion of cases that were correctly predicted in the test set.
+
+## Evaluation Metrics
+
+We introduce the `caret` package, which provides useful functions to facilitate machine learning in R. For our first example, we use the height data provided by the `dslabs` package.
+
+We start by defining the outcome and predictors.
+
+```{r}
+# Outcome = sex
+y <- heights$sex
+# Predictor/feature - only 1 = height
+x <- heights$height
+```
+
+#### Training & Test Sets
+
+To mimic the ultimate evaluation process, we typically split the data into two parts and act as if we don’t know the outcome for one of these. We stop pretending we don’t know the outcome to evaluate the algorithm, but only after we are done constructing it. We refer to the group for which we know the outcome, and that we use to develop the algorithm, as the **training set**. We refer to the group for which we pretend we don’t know the outcome as the **test set**.
+
+A standard way of generating the training and test sets is by randomly splitting the data. The `caret` package includes the function `createDataPartition` that helps us generate indexes for randomly splitting the data into training and test sets:
+
+```{r}
+set.seed(2007)
+test_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+```
+
+where,
+
+`times` = how many random samples of indices to return
+
+`p` = what proportion of the data is represented by the index
+
+`list` = if we want the indices returned as a list or not.
+
+We can use the result of the `createDataPartition` function call to define the training and test sets as follows:
+
+```{r}
+test_set <- heights[test_index, ]
+train_set <- heights[-test_index, ]
+```
+
+#### Defining the ML Task
+
+The simplest ML task defined is guessing the outcome. We are completely ignoring the feature of the data (height) and just guessing the sex. Thus, our overall accuracy should be 50%.
+
+In ML applications, we should encode categorical outcomes as factors.
+
+```{r}
+# Guessing the outcome
+y_hat <- sample(c("Male", "Female"), length(test_index), replace = TRUE) |> 
+  factor(levels = levels(test_set$sex))
+
+# Overall accuracy
+acc <- mean(y_hat == test_set$sex)
+print(acc)
+```
+
+In order to do better, let's explore the data.
+
+```{r}
+heights |> group_by(sex) |> 
+  summarise(avg = mean(height), sd = sd(height))
+```
+
+The results show that males are taller than females on average. Thus, we can change $\hat{y}$ to predict the outcome as male if the height is within 2 standard deviations of the average male height.
+
+```{r}
+# Predict male if height is greater than theta = 67.
+y_hat <- factor(ifelse(x > 67, "Male", "Female"), levels(test_set$sex))
+
+acc <- mean(y_hat == y)
+print(acc)
+```
+
+Our accuracy went up to 73%.
+
+To do even better, let's examine the overall accuracy for other values of $\theta$ (cutoffs) and then pick the $\theta$ with the best result.
+
+```{r}
+# Examine overall accuracy of 10 cutoffs
+thetas <- seq(61, 70)
+
+# Overall accuracy for each cutoff
+accuracies <- sapply(thetas, function(theta){
+  y_hat <- factor(if_else(train_set$height > theta, "Male", "Female"), levels = levels(train_set$sex))
+  mean(y_hat == train_set$sex)
+})
+```
+
+```{r}
+# Plot accuracy for each cutoff
+plot(thetas, accuracies, type = "l")
+
+# Maximum accuracy
+print(paste("Maximum accuracy:", max(accuracies)))
+
+# Best cutoff
+print(paste("Best cutoff:", thetas[which.max(accuracies)]))
+```
+
+Thus the best cutoff is 64 with a maximum overall accuracy of 85%. This is better than 50%. Let's test this cutoff on the test set.
+
+```{r}
+y_hat <- factor(if_else(test_set$height > 64, "Male", "Female"), levels = levels(test_set$sex))
+
+# Overall accuracy on test set
+acc <- mean(y_hat == test_set$sex)
+print(acc)
+```
+
+We get an overall accuracy of 80% on the test set. It is a bit lower than the training accuracy but is still better than guessing.
+
+### Confusion Matrix
+
+The classification that we developed for the heights dataset above says that if a student is taller than the average height of a female, the student is a male. But on average, males are not that short.
+
+This means **overall accuracy can be deceptive.** Thus, we construct a **confusion matrix** that tabulates each combination of predicted outcome and actual outcome. We can do in base R with `table(predicted = y_hat, actual = test_set$sex)` or in `caret` with `confusionMatrix`:
+
+```{r}
+cm <- confusionMatrix(data = y_hat, reference = test_set$sex)
+cm$table
+```
+
+Here, 48 females and 374 males are predicted correctly. 32 males were incorrectly predicted to be females and 71 females were incorrectly predicted to be males. Let's compute the accuracy for each sex separately:
+
+```{r}
+cm$byClass[c("Sensitivity", "Specificity", "Prevalence")]
+```
+
+Here, sensitivity is the overall accuracy for predicting females, which is 40% (worse than guessing), while for males it is 92%. Too many females are being predicted as males. This is because the **data is biased towards males**. We can see that because the prevalence of females in the dataset is 22%.
+
+Thus, apart from overall accuracy, we need to evaluate sensitivity and specificity also.
+
+### Sensitivity & Specificity
+
+This is the confusion matrix:
+
+| \_                     | Actually positive                     | Actually negative                    |
+|------------------|:--------------------------|:--------------------------|
+| **Predicted positive** | True positives (TP)                   | False positives (FP or type I error) |
+| **Predicted negative** | False negatives (FN or type II error) | True negatives (TN)                  |
+
+**Sensitivity = true positive rate (TPR) = recall** = $\frac{TP}{TP+FN}$ = $Pr(\hat{Y} = 1 | Y = 1)$
+
+**Specificity = true negative rate (TNR)** = $\frac{TN}{TN+FP}$ = $Pr(\hat{Y} = 0 | Y = 0)$
+
+-   Another way of quantifying specificity is by calculating the **positive predictive value (PPV)**, also called **precision** = $\frac{TP}{TP+FP}$ = $Pr(Y = 1 | \hat{Y} = 1)$
+-   Precision is dependent on prevalence, because higher prevalence means higher precision even when guessing. Therefore, by Baye's theorem,\
+    Precision = $TPR \times \frac{Prevalence}{TPR \times Prevalence + FPR \times (1-Prevalence)}$,\
+    where $FPR = \frac{FP}{FP + TN}$ = (1 - specificity)
+
+`confusionMatrix` will calculate all these metrics once we define the "positive" category $(Y=1)$. The first level given to the function is classified as the positive outcome. In the example of the heights dataset, "Female" is considered positive because it comes first alphabetically.
+
+### Balanced accuracy & F1 score
+
+**Balanced accuracy** is a single metric that describes both sensitivity and specificity. It is the **average** of both those metrics. Since these two metrics are actually rates, we compute the **harmonic average**.
+
+F1 score is the harmonic average of sensitivity and precision (a measure of specificity).
+
+$F_1 = \frac{1}{\frac{1}{2} (\frac{1}{recall} + \frac{1}{precision}) }$
+
+$= 2 \times \frac{precision \cdot recall}{precision + recall}$
+
+Depending on the context, some errors are more costly than others.
+
+e.g., in aeroplane safety, it is more important to maximise sensitivity over specificity.
+
+Thus, we use a weight $\beta$ to define how much more important sensitivity is compared to specificity.
+
+$F_1 = \frac{1}{\frac{\beta^2}{1 + \beta^2} \frac{1}{recall} + \frac{1}{1 + \beta^2} \frac{1}{precision}) }$
+
+`F_meas` function in `caret` computes this summary with `beta` defaulting to 1.
+
+```{r}
+thetas <- seq(61, 70)
+F_1 <- sapply(thetas, function(x){
+  y_hat <- factor(if_else(train_set$height > x, "Male", "Female"), levels(train_set$sex))
+  F_meas(data = y_hat, reference = factor(train_set$sex))
+})
+```
+
+Plotting F1 values versus the cutoffs.
+
+```{r}
+# Plot accuracy for each cutoff
+plot(thetas, F_1, type = "l")
+
+# Maximum accuracy
+print(paste("Maximum F1 value:", max(F_1)))
+
+# Best cutoff
+print(paste("Best cutoff:", thetas[which.max(F_1)]))
+```
+
+A cutoff of 66 makes more sense for the data. Let's test this new cutoff on the test dataset and calculate sensitivity and specificity again. Another way to get these metrics is to call the `sensitivity` and `specificity` functions instead of calculating the confusion matrix.
+
+```{r}
+y_hat <- factor(if_else(test_set$height > 66, "Male", "Female"), levels = levels(test_set$sex))
+# Accuracy for predicting females
+sensitivity(data = y_hat, reference = test_set$sex)
+# Accuracy for predicting males
+specificity(data = y_hat, reference = test_set$sex)
+
+```
+
+Thus, the F1 score helped us pick a better cutoff because the accuracy of predicting females increased from 40% to 63%. However, **it is important to take prevalence into consideration by decreasing the false positive rate.**
+
+#### Receiver Operating Characteristic Curve & Precision-Recall Curve
+
+**ROC** plots sensitivity (TPR) versus false positive rate (1-specificity). It is used to identify which machine learning method is best suited to the data. Ideally, the curve should have a steep upward slope and plateau at 1. While making ROC curves, add the cutoff associated with each point. The only con of this measure is that it does not depend on prevalence.
+
+When prevalence matters, we can make a **precision vs. recall** curve. For good precision, the graph will be higher. We have to plot them for each outcome Y. In the heights example, this means plotting Y=1 for males and Y=1 for females.
+
+### Mean Squared Error
+
+F1 score, sensitivity, specificity, and accuracy are only applicable to binary outcomes, with the exception of the former, which is only applicable to categorical data.
+
+**Mean squared error (MSE)** or **true error** is applicable to both continuous and categorical data.
+
+The squared loss function is $(\hat{y}-y)^2$, where $\hat{y}$ is the predictor and $y$ is the observed outcome. Thus, the $MSE \equiv E\{(\hat{Y} - Y)^2\}$
+
+If the outcomes are binary, MSE = (1 - expected accuracy) because $(\hat{y}-y)^2$ is 0 if the prediction is correct and 1 otherwise.
+
+Since MSE is a theoretical quantity, one common observable estimate is:
+
+$\hat{MSE} = \frac{1}{N} \sum_{i=1}^{N} (\hat{y}_i - y_i)^2$
+
+where $\hat{y}_i$ is generated completely independently from $y_i$. This is called **apparent error**.
+
+In practise, we often report the **root mean squared error (RMSE)** which is $\sqrt{MSE}$.
+
+#### Conditional Expectation Minimises MSE
+
+Conditional expectation is equivalent to conditional probability and it minimises the MSE. Thus, the main way in which competing machine learning algorithms differ is in their approach to estimating the conditional expectation.
+

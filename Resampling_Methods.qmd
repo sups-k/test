@@ -1,0 +1,112 @@
+---
+title: "Resampling Methods"
+author: "Suparna Kumar"
+format: html
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| #| warning: false
+library(tidyverse)
+library(dslabs)
+library(caret)
+```
+
+## k-Nearest Neighbours (kNN)
+
+kNN is typically used as a classification algorithm, working off the assumption that similar points can be found near one another. The average "k" nearest neighbours is taken to make a prediction about a classification.
+
+We will use the example of differentiating between 2 and 7 using the MNIST dataset. For that, we are interested in estimating the conditional probability function:
+
+$p(\textbf{x}) = Pr( Y=1 | X_1=x_1, X_2=x_2 )$
+
+since there are only 2 classes defined (k = 2), "2" and "7".
+
+We use the `knn3` function from the `caret` package. We will specify:
+
+-   the formula to be used
+
+    -   `outcome ~ predictor_1 + predictor_2 + ... + predictor_p`
+
+-   a data frame containing all data to be used
+
+    -   If the predictors are all variables in the data frame, use `.` like `outcome ~ .`
+
+-   Pick the value of k (not the classes k but the kNN k)
+
+    -   By default, `k = 5`
+
+Our example dataset of digits is balanced and we care just as much about sensitivity as we do specificity, so we will use accuracy to quantify the performance.
+
+The `predict` function for `knn3` produces a probability for each class. We can obtain the probability of being a "7" as the estimate $\hat{p}(\textbf{x})$ using `type = "prob"`, which is the default setting. To obtain the actual prediction, we have to specify `type = "class"`.
+
+```{r}
+# y is a column in the data frame mnist_27$train.
+# y is a factor with levels "2" and "7"
+# There are 2 predictors x_1 and x_2
+knn_fit <- knn3(y ~ ., data = mnist_27$train, k = 5)
+
+# Actual prediction - use test set
+y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
+
+# Accuracy
+confusionMatrix(y_hat_knn, mnist_27$test$y)$overall["Accuracy"]
+```
+
+We obtain 81.5% accuracy in distinguishing between "2" and "7". Let's check the accuracy of the model on the training set.
+
+```{r}
+y_hat_knn_train <- predict(knn_fit, mnist_27$train, type = "class")
+confusionMatrix(y_hat_knn_train, mnist_27$train$y)$overall["Accuracy"]
+```
+
+Here, we see that the accuracy on the training set is 88.25%, i.e., it is higher. This is due to **over-training**. This means we need to **pick a larger "k"**. However, picking too large a "k" can result in **over-smoothing**.
+
+## Parameter Tuning
+
+It is very common for machine learning algorithms to require that we set a value(s) before we even fit the model. An example is the "k" in kNN. These values are called **parameters** and the picking the parameters is called **tuning**.
+
+In principle, we want to pick the parameters that maximise accuracy or minimise the expected MSE. To do this, we use **resampling methods**.
+
+## Resampling Methods
+
+In ML, there are multiple parameters, so we use the notation $\lambda$ to represent them. The predictions obtained by a set $\lambda$ is denoted by $\hat{y}(\lambda)$ and the MSE for this choice is MSE($\lambda$).
+
+Our goal is to find the $\lambda$ that minimises MSE($\lambda$).
+
+### Cross Validation
+
+We split the data into 3 sets:
+
+1.  training
+
+2.  validation - from training set
+
+    -   We do this many times assuring that the estimates of MSE obtained in each dataset are independent from each other. There are several proposed methods for doing this, one of which is K-fold cross validation
+
+3.  testing - 10-20%
+
+#### K-fold cross validation
+
+In K-fold cross validation, we randomly split the observations into B non-overlapping sets of training data and validation data. For each set, we obtain MSE($\lambda$). For our final estimate, we calculate the average of all MSE($\lambda$) values. Then, we select the $\lambda$ that minimises the MSE.
+
+Large values of B are preferred but they result in slow computation times. That's why B = 5 and B = 10 are popular choices. One way we can improve the variance of our final estimate is to take more samples. To do this, we would no longer require the training set to be partitioned into non-overlapping sets. Instead, we would just pick B sets of some size at random.
+
+The estimate of our final algorithm can be performed with cross-validation on the test set.
+
+Once we are satisfied with this model and want to make it available to others, we could refit the model on the entire dataset, without changing the optimized parameters.
+
+#### Bootstrap resampling
+
+Typically, cross-validation involves partitioning the original dataset into a training set to train the model and a testing set to evaluate it. With the bootstrap approach, you can create multiple different training datasets via bootstrapping. This method is sometimes called bootstrap aggregating or bagging.
+
+In bootstrap resampling, we create a large number of bootstrap samples from the original training dataset. Each bootstrap sample is created by randomly selecting observations with replacement, usually the same size as the original training dataset. For each bootstrap sample, we fit the model and compute the MSE estimate on the observations not selected in the random sampling, referred to as the out-of-bag observations. These out-of-bag observations serve a similar role to a validation set in standard cross-validation.
+
+We then average the MSEs obtained in the out-of-bag observations from each bootstrap sample to estimate the model’s performance.
+
+This approach is the default in the `caret` package.
+
+
+
+
