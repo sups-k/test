@@ -97,7 +97,7 @@ The estimate of our final algorithm can be performed with cross-validation on th
 
 Once we are satisfied with this model and want to make it available to others, we could refit the model on the entire dataset, without changing the optimized parameters.
 
-#### Bootstrap resampling
+### Bootstrap resampling
 
 Typically, cross-validation involves partitioning the original dataset into a training set to train the model and a testing set to evaluate it. With the bootstrap approach, you can create multiple different training datasets via bootstrapping. This method is sometimes called bootstrap aggregating or bagging.
 

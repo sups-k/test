@@ -295,6 +295,7 @@ One way to reduce run time is to use k-fold cross validation with a smaller numb
 
 ```{r}
 control <- trainControl(method = "cv", number = 10, p = .9)
+# Repeat 10 times, 90% is not the test
 ```
 
 and re-running the `train` function with this choice specified via the `trControl` argument. For example,

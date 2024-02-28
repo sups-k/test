@@ -32,7 +32,7 @@ y_test <- factor(mnist$test$labels[index])
 # decide on a model.
 
 # Remove features with near-zero variance
-nzv <- nearZeroVar(x)
+nzv <- nearZeroVar(x) # Prints column names of pixels that are on the edge
 col_index <- setdiff(1:ncol(x), nzv)
 length(col_index)
 
@@ -44,7 +44,7 @@ colnames(x_test) <- colnames(x)
 control <- trainControl(method = "cv", number = 5, p = .9)
 
 # Find best training parameter (k)
-set.seed(2008)
+# set.seed(2008)
 train_knn_cv <- train(x = x[, col_index],
                       y = y,
                       method = "knn",
