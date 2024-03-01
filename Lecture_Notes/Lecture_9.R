@@ -44,6 +44,13 @@ round(colMeans(x == 0), 2)
 # 50% of each gene are 0.
 
 
+x <- log2(x+0.5)
+y <- log2(y+0.5)
+d <- rowMeans(y) - rowMeans(x)
+a <- rowMeans(cbind(x,y))
+plot(a, d)
+
+
 
 
 
