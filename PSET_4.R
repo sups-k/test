@@ -34,7 +34,7 @@ y_test <- factor(mnist$test$labels[index])
 # Remove features with near-zero variance
 nzv <- nearZeroVar(x) # Prints column names of pixels that are on the edge
 col_index <- setdiff(1:ncol(x), nzv)
-length(col_index)
+# length(col_index)
 
 # Add column names to feature matrices (training & testing)
 colnames(x) <- 1:ncol(mnist$train$images)
@@ -51,11 +51,17 @@ train_knn_cv <- train(x = x[, col_index],
                       tuneGrid = data.frame(k = seq(3, 13, 2)),
                       trControl = control)
 
+# plot(train_knn_cv) # will show you the MSE in a graph
+# If MSE is too wiggly, it means do more cross-validation with bigger `k` in "k-cross validation"
+
 # Train kNN model with best k value
-fit_knn <- knn3(x[, col_index], y,  k = train_knn_cv$bestTune)
+# fit_knn <- knn3(x[, col_index], y,  k = train_knn_cv$bestTune)
+# This is NOT REQUIRED. `train_knn_cv` already has the BEST one stored in it
 
 # Calculate error rate of the trained kNN model
-y_hat_knn <- predict(fit_knn, x_test[, col_index], type = "class")
+# DON'T DO THIS `predict`. ONLY USE `train_knn_cv` FOR `predict`
+# y_hat_knn <- predict(fit_knn, x_test[, col_index], type = "class")
+y_hat_knn <- predict(train_knn_cv, x_test[, col_index], type = "class")
 acc <- confusionMatrix(y_hat_knn, factor(y_test))$overall["Accuracy"]
 error_rate <- 1 - acc
 print(paste("Error rate of kNN: ", error_rate))
@@ -133,16 +139,19 @@ print(paste("Error rate of GLM: ", error_rate))
 
 # kNN
 p_knn  <- predict(fit_knn,  x_test[,col_index],  type="prob")
+p_knn <- p_knn / rowSums(p_knn)
 
 # Random Forest
 p_rf <- predict(fit_rf_100, x_test[,col_index], type = "prob")  
 p_rf <- p_rf / rowSums(p_rf)
 
 # GLM
+# TYPE MUST BE "PROB" HERE OTHERWISE "RAW"
 p_glm <- predict(fit_glm,  x_test[,col_index],  type="response") |>
   dplyr::as_tibble() |>
   dplyr::rename_with(~str_remove(., '.s0')) |> 
   as.matrix()
+p_glm <- p_glm / rowSums(p_glm)
 
 # Ensemble
 p <- (p_rf + p_knn + p_glm)/3
@@ -153,3 +162,11 @@ y_pred <- factor(apply(p, 1, which.max) - 1)
 acc <- confusionMatrix(y_pred, y_test)$overall["Accuracy"]
 error_rate <- 1 - acc
 print(paste("Error rate of ensemble: ", error_rate))
+
+
+######## Parallelisation ######
+library(doParallel)
+n_cores <- detectCores() # 8 cores in my Mac
+print(n_cores)
+registerDoParallel(cores = n_cores - 1)
+control <- trainControl(method = "cv", number = 10, p = 0.9, allowParallel = TRUE)
