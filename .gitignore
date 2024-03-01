@@ -3,3 +3,6 @@
 .Rhistory
 test.Rproj
 mnist.rda
+*.gct
+*.txt
+*.xlsx
