@@ -38,3 +38,69 @@ image(as.matrix(d))
 image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
 # Yellow squares at the diagonal represent observations from the same digits
 # Yellow means the distance is short
+
+# Ex 1: Generate two matrix, A and B, containing randomly generated and normally
+# distributed numbers. The dimensions of these two matrices should be 4 x 3 and 3 x 6,
+# respectively. Confirm that C <- A %*% B produces the same results as:
+# m <- nrow(A)
+# p <- ncol(B)
+# C <- matrix(0, m, p)
+# for(i in 1:m){
+#   for(j in 1:p){
+#     C[i,j] <- sum(A[i,] * B[,j])
+#   }
+# }
+
+A <- matrix(rnorm(12), 4, 3)
+B <- matrix(rnorm(18), 3, 6)
+C <- A %*% B # Performing matrix multiplication
+
+# Yes it does!
+
+# Ex 2: Solve the following system of equations using R:
+# x + y + z + w = 10
+# 2x + 3y - z - w = 5
+# 3x - y + 4z - 2w = 15
+# 2x + 2y - 2z - 2w = 20
+
+cf <- matrix(c(1,1,1,1,2,3,-1,-1,3,-1,4,-2,2,2,-2,-2), 4, 4, byrow = TRUE)
+sols <- matrix(c(10, 5, 15, 20), 4, 1)
+
+ans <- solve(cf) %*% sols
+
+# Ex 3: Generate a boxplot showing the distances for the second row of x
+# stratified by digits. Do not include the distance to itself, which we know is
+# 0. Can you predict what digit is represented by the second row of x?
+
+x <- mnist$train$images[1:300,]
+y <- mnist$train$labels[1:300]
+d <- as.matrix(dist(x))
+
+# Extract the distances for the second row of d stratified by digits
+distances <- list()
+for (digit in 0:9) {
+  indices <- which(y == digit)
+  digit_distances <- d[2, indices] # Extract distances for the digit
+  digit_distances <- digit_distances[digit_distances != 0] # Exclude the distance to itself
+  distances[[as.character(digit)]] <- digit_distances
+}
+
+# Create a boxplot
+boxplot(distances, xlab = "Digits", ylab = "Distance", 
+        main = "Distances for Each Digit Stratified by Digits")
+
+# The second digit is 0 because it has the lowest distance compared to other digits
+
+# Ex 4: Use the apply function and matrix algebra to compute the distance between
+# the fourth digit mnist$train$images[4,] and all other digits represented in
+# mnist$train$images. Then generate a boxplot as in exercise 2 and predict what
+# digit is the fourth row.
+
+
+
+
+
+
+
+
+
