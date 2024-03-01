@@ -30,10 +30,10 @@ identical(df1$Name, df2$Name)
 # for genenames. Call the resulting object gene_map.
 
 gene_map <- df1[, c("id", "Name", "Description")]
-gene_map[1:5, ]
+# gene_map[1:5, ]
 
 # 4. Remove the columns related to gene identification from both tables and
-# create two numeric matrics x and y. Once you create the two matrices, remove
+# create two numeric matrices x and y. Once you create the two matrices, remove
 # the data frames to save space.
 
 x <- as.matrix(df1[, c("id", "Name", "Description"):=NULL])
@@ -48,8 +48,7 @@ gc();gc()
 # 5. Compute a vector d with the average differences between aorta and tibial for each gene.
 x <- log2(x+0.5)
 y <- log2(y+0.5)
-#d <- rowMeans(y) - rowMeans(x)
-d <- rowMeans(x) - rowMeans(y)
+d <- rowMeans(y) - rowMeans(x)
 
 # 6. Compute the average across all samples (combine x and y) and keep it in a.
 # Make a histogram of d, a histogram of a, and plot d versus a. Use log
