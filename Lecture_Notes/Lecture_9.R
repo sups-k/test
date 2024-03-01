@@ -5,6 +5,8 @@
 # and gtex/gene_read_counts_by_tissue/gene_reads_2017-06-05_v8_artery_tibial.gct
 # into two data frames. Hint: consider using the data.table function fread.
 
+# setwd()
+
 library(data.table)
 # Gene counts by tissue
 # Have to skip 2 lines of this tsv file
