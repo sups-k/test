@@ -259,21 +259,20 @@ rm(acc, b1_x, b1_y, ctrl, error_rate, pca_b1_result, test_b1_y, test_b1_x, test_
 gc();gc()
 ```
 
-### Testing LDA Model on Centre C1
+### Testing LDA Model on Other Centres
 
+#### Centre C1
 Now let's test the accuracy on tissues collected from centre C1.
 
 ```{r}
 c1_x <- x[, pd$SMCENTER=="C1"]
 
-# Tissue types for each sample from centre A1
+# Tissue types for each sample from centre C1
 c1_y <- pd |> dplyr::filter(SMCENTER == "C1") |> 
   dplyr::select(SAMPID, SMTSD)
 ```
 
 ```{r}
-# Gene expression data for adipose tissue samples from centre B1
-# Genes are in rows and samples are in columns
 c1_x <- c1_x[ ,which(c1_y$SMTSD == "Adipose - Subcutaneous" | c1_y$SMTSD == "Brain - Cortex" | c1_y$SMTSD == "Heart - Left Ventricle")]
 c1_y <- c1_y[match(colnames(c1_x), c1_y$SAMPID),] |> dplyr::select(SAMPID, SMTSD)
 ```
@@ -305,3 +304,45 @@ rm(acc, error_rate, c1_x, c1_x_pca, c1_y, pca_c1_result, vst_c1_x, y_hat_lda)
 gc()
 ```
 
+#### Centre D1
+Now let's test the accuracy on tissues collected from centre D1.
+
+```{r}
+d1_x <- x[, pd$SMCENTER=="D1"]
+
+# Tissue types for each sample from centre D1
+d1_y <- pd |> dplyr::filter(SMCENTER == "D1") |> 
+  dplyr::select(SAMPID, SMTSD)
+```
+
+```{r}
+d1_x <- d1_x[ ,which(d1_y$SMTSD == "Adipose - Subcutaneous" | d1_y$SMTSD == "Brain - Cortex" | d1_y$SMTSD == "Heart - Left Ventricle")]
+d1_y <- d1_y[match(colnames(d1_x), d1_y$SAMPID),] |> dplyr::select(SAMPID, SMTSD)
+```
+
+Transform the test data using VST and perform PCA.
+
+```{r}
+vst_d1_x <- vst(d1_x)
+
+# Apply PCA
+pca_d1_result <- prcomp(t(vst_d1_x))
+
+d1_x_pca <- pca_d1_result$x[,1:10]
+```
+
+Prediction score
+```{r}
+y_hat_lda <- predict(lda_model, d1_x_pca, type = "raw")
+acc <- confusionMatrix(y_hat_lda, factor(d1_y$SMTSD))$overall["Accuracy"]
+error_rate <- 1 - acc
+print(paste("Error rate of LDA on D1: ", error_rate))
+```
+
+Clear workspace.
+```{r}
+#| echo: false
+#| warning: false
+rm(acc, error_rate, d1_x, d1_x_pca, d1_y, pca_d1_result, vst_d1_x, y_hat_lda)
+gc()
+```
