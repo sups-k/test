@@ -123,12 +123,6 @@ gc();gc()
 
 You now have the predictors in `x` and all the sample information in `pd`. Divide both `x` and `pd` into training and test. Build your algorithm on the `B1` center and show your accuracy in the rest.
 
-```{r}
-x[ ,which(pd$SMTSD == "Adipose - Subcutaneous")]
-table(pd$SMCENTER) # Use B1 to train and test on C1
-y <- table(pd$SMTSD)
-```
-
 
 Loading required libraries:
 ```{r}
@@ -137,6 +131,7 @@ Loading required libraries:
 library(caret)
 library(matrixStats)
 library(DESeq2)
+library(MASS)
 ```
 
 Set up parallel processing.
@@ -145,80 +140,168 @@ Set up parallel processing.
 doParallel::registerDoParallel(cores = 6)
 ```
 
+### Adipose Tissue, Brain, and Heart
 
-Preparing the gene expression data and tissue labels from centre B1. Some labels have less than 100 samples associated with them, so I removed them from the training data.
+There are too many tissue types and my laptop cannot handle so much data, so I'm picking only 3 to train on. Preparing the gene expression data for adipose tissue, brain, and heart from centre B1. Thus, the number of samples will be less than 663+255+432 = 1350.
 
 ```{r}
-# Gene expression data for all samples from centre B1
-# Have to take transpose so that samples are in rows and genes in columns
-b1_x <- t(x[, pd$SMCENTER=="B1"])
+b1_x <- x[, pd$SMCENTER=="B1"]
 
 # Tissue types for each sample from centre B1
 b1_y <- pd |> dplyr::filter(SMCENTER == "B1") |> 
   dplyr::select(SAMPID, SMTSD)
-
-# Get the table of organ samples
-organ_counts <- table(as.factor(b1_y$SMTSD))
-# Get the indices of organs with fewer than 3 samples
-remove_indices <- names(organ_counts[organ_counts < 3])
-# Get the indices to keep
-keep_indices <- !(b1_y$SMTSD %in% remove_indices)
-
-# Remove labels with fewer than 100 samples from b1_y and b1_x
-b1_y_filtered <- b1_y[keep_indices,]
-b1_x_filtered <- b1_x[keep_indices, ]
-
-# Ensure the order of samples remains the same
-b1_y_filtered <- b1_y_filtered[order(match(rownames(b1_x_filtered), b1_y_filtered$SAMPID)), ]
-
-# b1_x remains the same because we didn't change its order
-
-# Check the new class distribution
-table(as.factor(b1_y_filtered$SMTSD))
-
-# Clear memory for smoother run
-rm(organ_counts, keep_indices, remove_indices, b1_x, b1_y)
-gc();gc()
 ```
 
+```{r}
+# Gene expression data for adipose tissue samples from centre B1
+# Genes are in rows and samples are in columns
+b1_x <- b1_x[ ,which(b1_y$SMTSD == "Adipose - Subcutaneous" | b1_y$SMTSD == "Brain - Cortex" | b1_y$SMTSD == "Heart - Left Ventricle")]
+b1_y <- b1_y[match(colnames(b1_x), b1_y$SAMPID),] |> dplyr::select(SAMPID, SMTSD)
+```
+
+### Train & Test Sets
 Now I will split the data into train and test sets.
 
 ```{r}
-train_index <- createDataPartition(as.factor(b1_y_filtered$SMTSD), times = 1, p = 0.8, list = FALSE)
+# Transpose to get genes in columns and samples in rows
+b1_x <- t(b1_x)
+# 80% training and 20% test
+train_index <- createDataPartition(as.factor(b1_y$SMTSD), times = 1, p = 0.8, list = FALSE)
 
-train_b1_x <- b1_x_filtered[train_index,]
-train_b1_y <- b1_y_filtered[train_index,]
+train_b1_x <- b1_x[train_index,]
+train_b1_y <- b1_y[train_index,]
 
-test_b1_x <- b1_x_filtered[-train_index,]
-test_b1_y <- b1_y_filtered[-train_index,]
+test_b1_x <- b1_x[-train_index,]
+test_b1_y <- b1_y[-train_index,]
 
 # Clear train_index
 rm(train_index)
 gc();gc()
 ```
 
-There are too many samples, so I will subset this dataset further. I will take 3 samples from each tissue type.
+
+### Data Transformation
+
+First, I apply VST transformation on the data because I have to remove the dependence of variance on mean and have to handle large numbers of zero gene counts. Then, I will apply principal component analysis and select the top principal components that describe most of the data. I will train the model based on the top principal components.
 
 ```{r}
-subset_y <- train_b1_y %>%
-    group_by(SMTSD) %>%
-    slice_sample(n = 3, replace = FALSE)
-subset_x <- train_b1_x[rownames(train_b1_x) %in% subset_y$SAMPID,]
-subset_y <- subset_y[match(rownames(subset_x), subset_y$SAMPID),]
+# For VST, ensure that genes are in the rows & samples in the columns
+vst_b1_x <- vst(t(train_b1_x))
+
+# Apply PCA - samples must be in the rows & genes in columns
+pca_b1_result <- prcomp(t(vst_b1_x))
 ```
 
+Choose the best number of PCs.
 
 ```{r}
-# Run vst transformation on 'train_b1_x' after transposing because `vst` expects samples in columns
-vst_b1_x <- vst(t(subset_x))
+# Remove big variable
+rm(vst_b1_x)
+plot(pca_b1_result$sdev^2/sum(pca_b1_result$sdev^2))
+```
+
+Let's zoom into the graph by looking at the first 50 PCs.
+```{r}
+plot((pca_b1_result$sdev^2/sum(pca_b1_result$sdev^2))[1:50])
+```
+
+Based on the graph, I choose 10 as my cutoff.
+
+```{r}
+dims <- 10
+train_b1_x_pca <- pca_b1_result$x[,1:dims]
+
+# Remove big variable
+rm(pca_b1_result)
+gc()
+```
+
+### Training LDA Model
+
+Train the machine learning task using LDA from the `MASS` package.
+```{r}
+# Define train control
+ctrl <- trainControl(method = "cv", number = 10, p = 0.9, allowParallel = TRUE)
+
+# Train LDA model
+lda_model <- train(x = train_b1_x_pca,
+                   y = as.factor(train_b1_y$SMTSD),
+                   method = "lda2",
+                   trControl = ctrl,
+                   tuneGrid = data.frame(dimen = seq(1, 10, 0.1)))
+```
+
+### Testing LDA Model on Test Set
+
+Transform the test data using VST and perform PCA.
+
+```{r}
+vst_b1_x <- vst(t(test_b1_x))
 
 # Apply PCA
 pca_b1_result <- prcomp(t(vst_b1_x))
 
-# Create data frame for PCA results
-pca_df <- data.frame(PC1 = pca_b1_result$x[, 1],
-                     PC2 = pca_b1_result$x[, 2],
-                     tissue = subset_y$SMTSD)
+test_b1_x_pca <- pca_b1_result$x[,1:dims]
+```
 
+Prediction score
+```{r}
+y_hat_lda <- predict(lda_model, test_b1_x_pca, type = "raw")
+acc <- confusionMatrix(y_hat_lda, factor(test_b1_y$SMTSD))$overall["Accuracy"]
+error_rate <- 1 - acc
+print(paste("Error rate of LDA: ", error_rate))
+```
+
+Clearing the workspace:
+```{r}
+#| echo: false
+rm(acc, b1_x, b1_y, ctrl, error_rate, pca_b1_result, test_b1_y, test_b1_x, test_b1_x_pca, train_b1_y, train_b1_x, train_b1_x_pca, vst_b1_x, y_hat_lda, dims)
+gc();gc()
+```
+
+### Testing LDA Model on Centre C1
+
+Now let's test the accuracy on tissues collected from centre C1.
+
+```{r}
+c1_x <- x[, pd$SMCENTER=="C1"]
+
+# Tissue types for each sample from centre A1
+c1_y <- pd |> dplyr::filter(SMCENTER == "C1") |> 
+  dplyr::select(SAMPID, SMTSD)
+```
+
+```{r}
+# Gene expression data for adipose tissue samples from centre B1
+# Genes are in rows and samples are in columns
+c1_x <- c1_x[ ,which(c1_y$SMTSD == "Adipose - Subcutaneous" | c1_y$SMTSD == "Brain - Cortex" | c1_y$SMTSD == "Heart - Left Ventricle")]
+c1_y <- c1_y[match(colnames(c1_x), c1_y$SAMPID),] |> dplyr::select(SAMPID, SMTSD)
+```
+
+Transform the test data using VST and perform PCA.
+
+```{r}
+vst_c1_x <- vst(c1_x)
+
+# Apply PCA
+pca_c1_result <- prcomp(t(vst_c1_x))
+
+c1_x_pca <- pca_c1_result$x[,1:10]
+```
+
+Prediction score
+```{r}
+y_hat_lda <- predict(lda_model, c1_x_pca, type = "raw")
+acc <- confusionMatrix(y_hat_lda, factor(c1_y$SMTSD))$overall["Accuracy"]
+error_rate <- 1 - acc
+print(paste("Error rate of LDA on C1: ", error_rate))
+```
+
+Clear workspace.
+```{r}
+#| echo: false
+#| warning: false
+rm(acc, error_rate, c1_x, c1_x_pca, c1_y, pca_c1_result, vst_c1_x, y_hat_lda)
+gc()
 ```
 
