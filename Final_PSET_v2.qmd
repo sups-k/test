@@ -1,0 +1,224 @@
+---
+title: "Predict Tissue Type Based on Gene Expression"
+author: "Suparna Kumar"
+format: html
+editor: visual
+---
+
+Your task is to build a machine learning algorithm that can predict tissue type from gene expression data. To do this we will use the Genotype-Tissue Expression (GTEx) project data. These data were collected across several centers. You will train on the data was processed in center B1 and will report the accuracy you obtain in the other centers. In cases where other centers include a tissue not represented in B1, you can exclude it from the testing. You can only use B1 to train.
+
+
+We start with some data wrangling and provide some guidance. However once the data is organized you will be on your own designing an algorithm.
+
+To accomplish this project you will be using all the skills you used during the course.
+
+## Data and metadata files
+
+We have downloaded files from the GTEX project that include both gene expression counts obtained from thousands of samples processed in RNA-Seq experiments and a sample annotation file describing each sample. Exploring the files on our Unix system we can start to understand how the data is organized explore the data:
+
+```{r}
+list.files("../gtex/metadata")
+
+# GTEx_Analysis_v8_Annotations_SampleAttributesDD.xlsx, GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt
+# GTEx_Analysis_v8_Annotations_SubjectPhenotypesDD.xlsx, GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt
+
+```
+
+1. Read the sample annotation files using the fread function from data.table as it is very fast. Call the object pd for phenotype data.
+
+```{r}
+#| echo: false
+#| warning: false
+library(data.table)
+library(tidyverse)
+```
+
+```{r}
+# Read phenotype data
+pd <- fread("../gtex/metadata/GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt")
+```
+
+
+2. Read the annotation on subjects and join them with the sample annotation. Note subject might contribute more than one sample:
+
+```{r}
+# Read subject data
+subjects <- fread("../gtex/metadata/GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt")
+```
+
+
+3. To connect them we need to extract the subject ID from the sample ID in pd. Add a new variable to the pd data frame called SUBJID with the subject ID.
+
+```{r}
+# Takes a pattern & subs with another
+pd$SUBJID <- gsub("(\\w*-\\w)-.*", "\\1", pd$SAMPID)
+# pd <- left_join(pd, subjects, by = "SUBJID")
+pd <- merge(pd, subjects, by = "SUBJID", all.x = TRUE)
+# For right join, all.y = T, for full join, all = T
+```
+
+
+4. The expression data is stored in gct files.
+```{r}
+list.files("../gtex/gene_read_counts_by_tissue")
+```
+
+Each tissue has its own gct (like csv) file.
+
+Rows in metadata are columns here.
+
+If you look at these, say with less, you will notice that the first two lines are information about the files and then its a tab delimited file. We also notice that the first three columns are a row id, a gene id, and a gene symbol.
+
+Read the files in one by one. Because we know we will be merging them, remove the gene id and gene symbol. We will later create a table to match ids to genes. Read all those files in:
+
+```{r}
+fns <- list.files("../gtex/gene_read_counts_by_tissue", full.name = TRUE)
+tables <- lapply(fns, function(fn){
+  cat("Reading file ", fn, "\n")
+  x <- fread(fn, skip = 2)
+  #  return(x[,-c(1,2)])
+  return(as.matrix(x[, c("id", "Name", "Description") :=NULL])) # keep ID if you're going to merge
+})
+```
+
+
+5. Now we are going to join all those tables into one big one. We will make sure that the rows match by using merge (data.table's join). This is overkill here because the GTEX project made sure that the rows were ordered the same way, but we will merge by id just to be sure. Hint: use the Reduce function.
+
+```{r}
+# x <- Reduce(function(x,y) merge(x,y,by="id", all+TRUE)) # Staying safe because what if the rows are not in the same order?
+x <- do.call(cbind, tables)
+
+# Check if all the column names in the files are in the metadata
+all(colnames(x) %in% pd$SAMPID)
+```
+
+In machine learning, observations are stored in rows. In genomics, observations (samples) are in columns and genes are in rows
+
+If output of `all(colnames(x) %in% pd$SAMPID)` is `FALSE`, check if there were accidental capital or small letters, dots instead of dash, prefix, or other formatting issues. Then check for missing samples. Best way to correct a missing sample is to contact the authors if you have a personal connection with them. Otherwise just drop the sample for analysis.
+
+6. Create a data frame with just the gene information.
+```{r}
+gene_map <- fread(fns[1], skip = 2) |>
+  as_tibble() |>
+  select(c("id", "Name", "Description"))
+```
+
+7. Make sure the pd table is in the same order as the columns of x.
+```{r}
+pd <- pd[match(colnames(x), pd$SAMPID),]
+```
+
+8. Now that everything is in the right order, remove the id from x so we can create a numeric matrix.
+
+Already done in step 4.5.
+
+```{r}
+# Clear memory for smoother run
+rm(fns, tables, subjects)
+gc();gc()
+```
+
+
+## Predict tissue type
+
+You now have the predictors in `x` and all the sample information in `pd`. Divide both `x` and `pd` into training and test. Build your algorithm on the `B1` center and show your accuracy in the rest.
+
+```{r}
+x[ ,which(pd$SMTSD == "Adipose - Subcutaneous")]
+table(pd$SMCENTER) # Use B1 to train and test on C1
+y <- table(pd$SMTSD)
+```
+
+
+Loading required libraries:
+```{r}
+#| echo: false
+#| warning: false
+library(caret)
+library(matrixStats)
+library(DESeq2)
+```
+
+Set up parallel processing.
+
+```{r}
+doParallel::registerDoParallel(cores = 6)
+```
+
+
+Preparing the gene expression data and tissue labels from centre B1. Some labels have less than 100 samples associated with them, so I removed them from the training data.
+
+```{r}
+# Gene expression data for all samples from centre B1
+# Have to take transpose so that samples are in rows and genes in columns
+b1_x <- t(x[, pd$SMCENTER=="B1"])
+
+# Tissue types for each sample from centre B1
+b1_y <- pd |> dplyr::filter(SMCENTER == "B1") |> 
+  dplyr::select(SAMPID, SMTSD)
+
+# Get the table of organ samples
+organ_counts <- table(as.factor(b1_y$SMTSD))
+# Get the indices of organs with fewer than 3 samples
+remove_indices <- names(organ_counts[organ_counts < 3])
+# Get the indices to keep
+keep_indices <- !(b1_y$SMTSD %in% remove_indices)
+
+# Remove labels with fewer than 100 samples from b1_y and b1_x
+b1_y_filtered <- b1_y[keep_indices,]
+b1_x_filtered <- b1_x[keep_indices, ]
+
+# Ensure the order of samples remains the same
+b1_y_filtered <- b1_y_filtered[order(match(rownames(b1_x_filtered), b1_y_filtered$SAMPID)), ]
+
+# b1_x remains the same because we didn't change its order
+
+# Check the new class distribution
+table(as.factor(b1_y_filtered$SMTSD))
+
+# Clear memory for smoother run
+rm(organ_counts, keep_indices, remove_indices, b1_x, b1_y)
+gc();gc()
+```
+
+Now I will split the data into train and test sets.
+
+```{r}
+train_index <- createDataPartition(as.factor(b1_y_filtered$SMTSD), times = 1, p = 0.8, list = FALSE)
+
+train_b1_x <- b1_x_filtered[train_index,]
+train_b1_y <- b1_y_filtered[train_index,]
+
+test_b1_x <- b1_x_filtered[-train_index,]
+test_b1_y <- b1_y_filtered[-train_index,]
+
+# Clear train_index
+rm(train_index)
+gc();gc()
+```
+
+There are too many samples, so I will subset this dataset further. I will take 3 samples from each tissue type.
+
+```{r}
+subset_y <- train_b1_y %>%
+    group_by(SMTSD) %>%
+    slice_sample(n = 3, replace = FALSE)
+subset_x <- train_b1_x[rownames(train_b1_x) %in% subset_y$SAMPID,]
+subset_y <- subset_y[match(rownames(subset_x), subset_y$SAMPID),]
+```
+
+
+```{r}
+# Run vst transformation on 'train_b1_x' after transposing because `vst` expects samples in columns
+vst_b1_x <- vst(t(subset_x))
+
+# Apply PCA
+pca_b1_result <- prcomp(t(vst_b1_x))
+
+# Create data frame for PCA results
+pca_df <- data.frame(PC1 = pca_b1_result$x[, 1],
+                     PC2 = pca_b1_result$x[, 2],
+                     tissue = subset_y$SMTSD)
+
+```
+

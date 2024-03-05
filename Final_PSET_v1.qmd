@@ -30,6 +30,7 @@ list.files("../gtex/metadata")
 #| echo: false
 #| warning: false
 library(data.table)
+library(tidyverse)
 ```
 
 ```{r}
@@ -84,7 +85,7 @@ tables <- lapply(fns, function(fn){
 5. Now we are going to join all those tables into one big one. We will make sure that the rows match by using merge (data.table's join). This is overkill here because the GTEX project made sure that the rows were ordered the same way, but we will merge by id just to be sure. Hint: use the Reduce function.
 
 ```{r}
-# x <- Reduce(function(x,y), merge(x,y,by="id", all+TRUE)) # Staying safe because what if the rows are not in the same order?
+# x <- Reduce(function(x,y) merge(x,y,by="id", all+TRUE)) # Staying safe because what if the rows are not in the same order?
 x <- do.call(cbind, tables)
 
 # Check if all the column names in the files are in the metadata
@@ -97,27 +98,127 @@ If output of `all(colnames(x) %in% pd$SAMPID)` is `FALSE`, check if there were a
 
 6. Create a data frame with just the gene information.
 ```{r}
-pd <- pd[match(colnames(x), pd$SAMPID),]
+gene_map <- fread(fns[1], skip = 2) |>
+  as_tibble() |>
+  select(c("id", "Name", "Description"))
 ```
 
 7. Make sure the pd table is in the same order as the columns of x.
 ```{r}
-x[ ,which(pd$SMTSD == "Adipose - Subcutaneous")]
-table(pd$SMCENTER) # Use B1 to train and test on C1
-train_x <- x[, pd$SMCENTER=="B1"] # Have to take transpose of x too
-
-# lda computes centres for each tissue
+pd <- pd[match(colnames(x), pd$SAMPID),]
 ```
 
 8. Now that everything is in the right order, remove the id from x so we can create a numeric matrix.
 
-```{r}
+Already done in step 4.5.
 
+```{r}
+# Clear memory for smoother run
+rm(fns, tables, subjects)
+gc();gc()
 ```
+
 
 ## Predict tissue type
 
 You now have the predictors in `x` and all the sample information in `pd`. Divide both `x` and `pd` into training and test. Build your algorithm on the `B1` center and show your accuracy in the rest.
 
+```{r}
+x[ ,which(pd$SMTSD == "Adipose - Subcutaneous")]
+table(pd$SMCENTER) # Use B1 to train and test on C1
+y <- table(pd$SMTSD)
+```
 
+
+Loading required libraries:
+```{r}
+#| echo: false
+#| warning: false
+library(caret)
+library(matrixStats)
+library(DESeq2)
+```
+
+Set up parallel processing.
+
+```{r}
+doParallel::registerDoParallel(cores = 6)
+```
+
+
+Preparing the gene expression data and tissue labels from centre B1. Some labels have less than 100 samples associated with them, so I removed them from the training data.
+
+```{r}
+# Gene expression data for all samples from centre B1
+# Have to take transpose so that samples are in rows and genes in columns
+b1_x <- t(x[, pd$SMCENTER=="B1"])
+
+# Tissue types for each sample from centre B1
+b1_y <- pd |> dplyr::filter(SMCENTER == "B1") |> 
+  dplyr::select(SAMPID, SMTSD)
+
+# Get the table of organ samples
+organ_counts <- table(as.factor(b1_y$SMTSD))
+# Get the indices of organs with fewer than 3 samples
+remove_indices <- names(organ_counts[organ_counts < 3])
+# Get the indices to keep
+keep_indices <- !(b1_y$SMTSD %in% remove_indices)
+
+# Remove labels with fewer than 100 samples from b1_y and b1_x
+b1_y_filtered <- b1_y[keep_indices,]
+b1_x_filtered <- b1_x[keep_indices, ]
+
+# Ensure the order of samples remains the same
+b1_y_filtered <- b1_y_filtered[order(match(rownames(b1_x_filtered), b1_y_filtered$SAMPID)), ]
+
+# b1_x remains the same because we didn't change its order
+
+# Check the new class distribution
+table(as.factor(b1_y_filtered$SMTSD))
+
+# Clear memory for smoother run
+rm(organ_counts, keep_indices, remove_indices, b1_x, b1_y)
+gc();gc()
+```
+
+Now I will split the data into train and test sets.
+
+```{r}
+train_index <- createDataPartition(as.factor(b1_y_filtered$SMTSD), times = 1, p = 0.8, list = FALSE)
+
+train_b1_x <- b1_x_filtered[train_index,]
+train_b1_y <- b1_y_filtered[train_index,]
+
+test_b1_x <- b1_x_filtered[-train_index,]
+test_b1_y <- b1_y_filtered[-train_index,]
+
+# Clear train_index
+rm(train_index)
+gc();gc()
+```
+
+There are too many samples, so I will subset this dataset further. I will take 3 samples from each tissue type.
+
+```{r}
+subset_y <- train_b1_y %>%
+    group_by(SMTSD) %>%
+    slice_sample(n = 3, replace = FALSE)
+subset_x <- train_b1_x[rownames(train_b1_x) %in% subset_y$SAMPID,]
+subset_y <- subset_y[match(rownames(subset_x), subset_y$SAMPID),]
+```
+
+
+```{r}
+# Run vst transformation on 'train_b1_x' after transposing because `vst` expects samples in columns
+vst_b1_x <- vst(t(subset_x))
+
+# Apply PCA
+pca_b1_result <- prcomp(t(vst_b1_x))
+
+# Create data frame for PCA results
+pca_df <- data.frame(PC1 = pca_b1_result$x[, 1],
+                     PC2 = pca_b1_result$x[, 2],
+                     tissue = subset_y$SMTSD)
+
+```
 
