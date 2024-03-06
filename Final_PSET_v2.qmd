@@ -51,7 +51,7 @@ subjects <- fread("../gtex/metadata/GTEx_Analysis_v8_Annotations_SubjectPhenotyp
 
 ```{r}
 # Takes a pattern & subs with another
-pd$SUBJID <- gsub("(\\w*-\\w)-.*", "\\1", pd$SAMPID)
+pd$SUBJID <- gsub("(\\w*-\\w*)-.*", "\\1", pd$SAMPID)
 # pd <- left_join(pd, subjects, by = "SUBJID")
 pd <- merge(pd, subjects, by = "SUBJID", all.x = TRUE)
 # For right join, all.y = T, for full join, all = T
