@@ -197,6 +197,7 @@ Choose the best number of PCs.
 ```{r}
 # Remove big variable
 rm(vst_b1_x)
+gc()
 plot(pca_b1_result$sdev^2/sum(pca_b1_result$sdev^2))
 ```
 
@@ -208,10 +209,14 @@ plot((pca_b1_result$sdev^2/sum(pca_b1_result$sdev^2))[1:50])
 Based on the graph, I choose 10 as my cutoff.
 
 ```{r}
+# Select important features for training
 dims <- 10
 train_b1_x_pca <- pca_b1_result$x[,1:dims]
 
-# Remove big variable
+# Save PCA rotation matrix
+pca_train_rotation <- pca_b1_result$rotation[,1:dims]
+
+# Remove large PCA result
 rm(pca_b1_result)
 gc()
 ```
@@ -237,11 +242,8 @@ Transform the test data using VST and perform PCA.
 
 ```{r}
 vst_b1_x <- vst(t(test_b1_x))
-
-# Apply PCA
-pca_b1_result <- prcomp(t(vst_b1_x))
-
-test_b1_x_pca <- pca_b1_result$x[,1:dims]
+# Apply PCA rotation
+test_b1_x_pca <- (t(vst_b1_x)) %*% pca_train_rotation
 ```
 
 Prediction score
@@ -255,7 +257,7 @@ print(paste("Error rate of LDA: ", error_rate))
 Clearing the workspace:
 ```{r}
 #| echo: false
-rm(acc, b1_x, b1_y, ctrl, error_rate, pca_b1_result, test_b1_y, test_b1_x, test_b1_x_pca, train_b1_y, train_b1_x, train_b1_x_pca, vst_b1_x, y_hat_lda, dims)
+rm(acc, b1_x, b1_y, ctrl, error_rate, test_b1_y, test_b1_x, test_b1_x_pca, train_b1_y, train_b1_x, train_b1_x_pca, vst_b1_x, y_hat_lda, dims)
 gc();gc()
 ```
 
@@ -281,11 +283,8 @@ Transform the test data using VST and perform PCA.
 
 ```{r}
 vst_c1_x <- vst(c1_x)
-
-# Apply PCA
-pca_c1_result <- prcomp(t(vst_c1_x))
-
-c1_x_pca <- pca_c1_result$x[,1:10]
+# Apply PCA rotation
+c1_x_pca <- (t(vst_c1_x)) %*% pca_train_rotation
 ```
 
 Prediction score
@@ -324,11 +323,8 @@ Transform the test data using VST and perform PCA.
 
 ```{r}
 vst_d1_x <- vst(d1_x)
-
-# Apply PCA
-pca_d1_result <- prcomp(t(vst_d1_x))
-
-d1_x_pca <- pca_d1_result$x[,1:10]
+# Apply PCA rotation
+d1_x_pca <- (t(vst_d1_x)) %*% pca_train_rotation
 ```
 
 Prediction score
